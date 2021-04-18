@@ -28,3 +28,6 @@ Kinston <- read.csv("./Data/Raw/02089500_Kinston_daily.csv") %>%
 
 #combine data
 
+
+#export processed data
+
