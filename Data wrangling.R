@@ -27,8 +27,10 @@ Kinston <- read.csv("./Data/Raw/02089500_Kinston_daily.csv") %>%
   rename(discharge_mean = Discharge..cubic.feet.per.second..Minimum..1)
 
 #combine datasets
-Gages <- do.call("rbind", list(FallsLake, Clayton, Goldsboro, Kinston)) %>%
-  select(-site_no) %>%
+Gages_l <- do.call("rbind", list(FallsLake, Clayton, Goldsboro, Kinston)) %>%
+  select(-site_no) 
+
+Gages_w <- Gages_l %>%
   pivot_wider(names_from = gage, values_from = discharge_mean) %>%
   arrange(datetime)
 
@@ -37,4 +39,5 @@ write.csv(FallsLake, "./Data/Processed/FallsLake_processed.csv")
 write.csv(Clayton, "./Data/Processed/Clayton_processed.csv")
 write.csv(Goldsboro, "./Data/Processed/Goldsboro_processed.csv")
 write.csv(Kinston, "./Data/Processed/Kinston_processed.csv")
-write.csv(Gages, "./Data/Processed/USGS_processed.csv")
+write.csv(Gages_l, "./Data/Processed/USGS1.csv")
+write.csv(Gages_w, "./Data/Processed/USGS2.csv")
