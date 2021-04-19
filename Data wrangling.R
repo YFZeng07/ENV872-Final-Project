@@ -26,12 +26,8 @@ Kinston <- read.csv("./Data/Raw/02089500_Kinston_daily.csv") %>%
          datetime = as.Date(datetime, format = "%m/%d/%Y")) %>%
   rename(discharge_mean = Discharge..cubic.feet.per.second..Minimum..1)
 
-#combine data
-Gage_data <- do.call("rbind", list(FallsLake, Clayton, Goldsboro, Kinston))
-#Gage_data <- aggregate(Gage_data[,3:6], FUN = sum, by = Gage_data$datetime)
-Gage_data <- pivot_wider(data = Gage_data, 
-                         names_from = gage,
-                         values_from = discharge_mean)
-
 #export processed data
 write.csv(FallsLake, "./Data/Processed/FallsLake_processed.csv")
+write.csv(Clayton, "./Data/Processed/Clayton_processed.csv")
+write.csv(Goldsboro, "./Data/Processed/Goldsboro_processed.csv")
+write.csv(Kinston, "./Data/Processed/Kinston_processed.csv")
