@@ -1,6 +1,7 @@
 #load packages
 library(tidyverse)
 library(lubridate)
+library(ggpmisc)
 
 ##Preparation===============================
 #import datasets
@@ -84,6 +85,14 @@ plot(Kinston_decomposed)
 
 
 #3. Discharge before and after the dam construction (1978-1981)=============================
+#Falls Lake
+FallsLake_pre <- FallsLake %>%
+  filter(datetime <= as.Date("1977-12-31"))
+FallsLake_post <- FallsLake %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+t.test(x = FallsLake_pre$discharge_mean, y = FallsLake_post$discharge_mean)
+
 #Clayton
 Clayton_pre <- Clayton %>%
   filter(datetime <= as.Date("1977-12-31"))
@@ -92,6 +101,36 @@ Clayton_post <- Clayton %>%
 
 t.test(x = Clayton_pre$discharge_mean, y = Clayton_post$discharge_mean)
 
+#Goldsboro
+Goldsboro_pre <- Goldsboro %>%
+  filter(datetime <= as.Date("1977-12-31"))
+Goldsboro_post <- Goldsboro %>%
+  filter(datetime >= as.Date("1982-01-01"))
 
-#4. annual average GLM?
+t.test(x = Goldsboro_pre$discharge_mean, y = Goldsboro_post$discharge_mean)
+
+#Kinston
+Kinston_pre <- Kinston %>%
+  filter(datetime <= as.Date("1977-12-31"))
+Kinston_post <- Kinston %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+t.test(x = Kinston_pre$discharge_mean, y = Kinston_post$discharge_mean)
+
+
+#4. annual average GLM================================
+#Falls Lake
+FallsLake_annual <- FallsLake %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(FallsLake_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) 
+
 #5. March adn April
