@@ -6,7 +6,8 @@ library(lubridate)
 #import datasets
 FallsLake <- read.csv("./Data/Processed/FallsLake_processed.csv") %>%
   select(2:5) %>%
-  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d"))
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d")) %>%
+  na.omit()
 
 Clayton <- read.csv("./Data/Processed/Clayton_processed.csv") %>%
   select(2:5)  %>%
@@ -18,7 +19,8 @@ Goldsboro <- read.csv("./Data/Processed/Goldsboro_processed.csv") %>%
 
 Kinston <- read.csv("./Data/Processed/Kinston_processed.csv") %>%
   select(2:5)  %>%
-  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d"))
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d")) %>%
+  na.omit()
 
 Gages_l <- read.csv("./Data/Processed/USGS1.csv") %>%
   select(-1) %>%
@@ -55,6 +57,41 @@ ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
   scale_color_discrete(breaks=c("Falls Lake","Clayton","Goldsboro", "Kinston")) +
   MyTheme
 
-#1. Time series analysis for each site
-#2. Discharge volumn before and after the dam construction comparison
-#3. March adn April
+#2. Time series analysis for each site==================
+#Falls Lake
+FallsLake_ts <- ts(FallsLake$discharge_mean, 
+                           start = c(1970,7), frequency = 365)
+FallsLake_decomposed <- stl(FallsLake_ts, s.window = "periodic")
+plot(FallsLake_decomposed)
+
+#Clayton
+Clayton_ts <- ts(Clayton$discharge_mean, 
+                   start = c(1927,8), frequency = 365)
+Clayton_decomposed <- stl(Clayton_ts, s.window = "periodic")
+plot(Clayton_decomposed)
+
+#Goldsboro
+Goldsboro_ts <- ts(Goldsboro$discharge_mean, 
+                 start = c(1930,3), frequency = 365)
+Goldsboro_decomposed <- stl(Goldsboro_ts, s.window = "periodic")
+plot(Goldsboro_decomposed)
+
+#Kinston
+Kinston_ts <- ts(Kinston$discharge_mean, 
+                   start = c(1930,3), frequency = 365)
+Kinston_decomposed <- stl(Kinston_ts, s.window = "periodic")
+plot(Kinston_decomposed)
+
+
+#3. Discharge before and after the dam construction (1978-1981)=============================
+#Clayton
+Clayton_pre <- Clayton %>%
+  filter(datetime <= as.Date("1977-12-31"))
+Clayton_post <- Clayton %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+t.test(x = Clayton_pre$discharge_mean, y = Clayton_post$discharge_mean)
+
+
+#4. annual average GLM?
+#5. March adn April
