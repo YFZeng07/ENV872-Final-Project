@@ -47,6 +47,9 @@ Gages_l_2 <- Gages_l %>%
 #plot annual mean
 ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
   geom_line(size = 1) +
+  geom_vline(xintercept = 1981, size = 1.5) +
+  geom_text(aes(x = 1981, label="1981", y = 5000), 
+            col = "black", size = 6, vjust = -0.5, angle = -90) +
   xlab("Year") + ylab("Annual mean discharge (cfs)") +
   labs(col = "Gage") +
   scale_color_discrete(breaks=c("Falls Lake","Clayton","Goldsboro", "Kinston")) +
