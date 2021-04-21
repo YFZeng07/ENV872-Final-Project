@@ -2,6 +2,7 @@
 library(tidyverse)
 library(lubridate)
 library(ggpmisc)
+library(ggpubr)
 
 ##Preparation===============================
 #import datasets
@@ -83,7 +84,6 @@ Kinston_ts <- ts(Kinston$discharge_mean,
 Kinston_decomposed <- stl(Kinston_ts, s.window = "periodic")
 plot(Kinston_decomposed)
 
-
 #3. Discharge before and after the dam construction (1978-1981)=============================
 #Falls Lake
 FallsLake_pre <- FallsLake %>%
@@ -91,7 +91,7 @@ FallsLake_pre <- FallsLake %>%
 FallsLake_post <- FallsLake %>%
   filter(datetime >= as.Date("1982-01-01"))
 
-t.test(x = FallsLake_pre$discharge_mean, y = FallsLake_post$discharge_mean)
+FallsLake_ttest <- t.test(x = FallsLake_pre$discharge_mean, y = FallsLake_post$discharge_mean)
 
 #Clayton
 Clayton_pre <- Clayton %>%
@@ -99,7 +99,7 @@ Clayton_pre <- Clayton %>%
 Clayton_post <- Clayton %>%
   filter(datetime >= as.Date("1982-01-01"))
 
-t.test(x = Clayton_pre$discharge_mean, y = Clayton_post$discharge_mean)
+Clayton_ttest<- t.test(x = Clayton_pre$discharge_mean, y = Clayton_post$discharge_mean)
 
 #Goldsboro
 Goldsboro_pre <- Goldsboro %>%
@@ -107,7 +107,7 @@ Goldsboro_pre <- Goldsboro %>%
 Goldsboro_post <- Goldsboro %>%
   filter(datetime >= as.Date("1982-01-01"))
 
-t.test(x = Goldsboro_pre$discharge_mean, y = Goldsboro_post$discharge_mean)
+Goldsboro_ttest <- t.test(x = Goldsboro_pre$discharge_mean, y = Goldsboro_post$discharge_mean)
 
 #Kinston
 Kinston_pre <- Kinston %>%
@@ -115,7 +115,21 @@ Kinston_pre <- Kinston %>%
 Kinston_post <- Kinston %>%
   filter(datetime >= as.Date("1982-01-01"))
 
-t.test(x = Kinston_pre$discharge_mean, y = Kinston_post$discharge_mean)
+Kinston_ttest <- t.test(x = Kinston_pre$discharge_mean, y = Kinston_post$discharge_mean)
+
+#build a table
+pre_dam <- c(FallsLake_ttest$estimate[1], Clayton_ttest$estimate[1], 
+             Goldsboro_ttest$estimate[1], Kinston_ttest$estimate[1])
+post_dam <- c(FallsLake_ttest$estimate[2], Clayton_ttest$estimate[2], 
+              Goldsboro_ttest$estimate[2], Kinston_ttest$estimate[2])
+p_value <- c(FallsLake_ttest$p.value, Clayton_ttest$p.value,
+             Goldsboro_ttest$p.value, Kinston_ttest$p.value)
+
+ttest_table <- data.frame(pre_dam, post_dam, p_value)
+colnames(ttest_table) <- c('Pre-dam mean discharge', 
+                           'Post-dam mean discharge', 'P value')
+rownames(ttest_table) <- c("Falls Lake", "Clayton", "Goldsboro", "Kinston")
+
 
 
 #4. annual average GLM================================
@@ -131,6 +145,58 @@ ggplot(FallsLake_annual, aes(x = year, y = annual_mean)) +
   geom_smooth(method = "lm", se = FALSE) +
   stat_poly_eq(formula = y~x, 
                aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               parse = TRUE) 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  ggtitle("Annual mean discharge at the Falls Lake gage") +
+  MyTheme
 
-#5. March adn April
+#Clayton
+Clayton_annual <- Clayton %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(Clayton_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  ggtitle("Annual mean discharge at the Clayton gage") +
+  MyTheme
+
+#Goldsboro
+Goldsboro_annual <- Goldsboro %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(Goldsboro_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  ggtitle("Annual mean discharge at the Goldsboro gage") +
+  MyTheme
+
+#Kinston
+Kinston_annual <- Kinston %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(Kinston_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  ggtitle("Annual mean discharge at the Kinston gage") +
+  MyTheme
