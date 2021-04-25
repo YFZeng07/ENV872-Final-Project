@@ -4,6 +4,7 @@ output:
     keep_tex: yes
     fig_caption: yes
     number_sections: yes
+always_allow_html: true
 geometry: margin=2.54cm
 title: "Dams in North Carolina: A Case Study of the Falls Lake Dam"
 subtitle: "https://github.com/cheneygardner/ENV872-Final-Project.git"
@@ -16,11 +17,7 @@ mainfont: Times New Roman
 knitr::opts_chunk$set(echo = TRUE)
 
 if(!require(pacman)) install.packages("pacman")
-pacman::p_load(knitr, tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, ggplot2, RColorBrewer, shiny, measurements, htmlwidgets, tinytex, leaflet, mapview)
-
-#update.packages(ask = FALSE, checkBuilt = TRUE)
-#tinytex::tlmgr_update()
-#tinytex::reinstall_tinytex()
+pacman::p_load(knitr, tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, ggplot2, RColorBrewer, shiny, measurements, leaflet, mapview, has_crop_tools, kable)
 
 gage.data.nc <- read.csv("./Data/Raw/gage_data_dam_new.csv")
 falls.lake <- read.csv("./Data/Raw/falls_lake.csv")
@@ -33,36 +30,32 @@ counties_sf <-  counties_all_sf %>% filter(STATEFP == 37)
 ```
 
 **Rationale and Research Questions:**   
-
-According to the Army Corps of Engineers’ National Inventory of Dams, North Carolina has 3191 dams, including the Falls Lake Dam. The Falls Lake Dam was completed in 1981 to manage the flow of the Neuse River. Flood control dams remove high flows but can have anthropogenic impacts on the ecological needs of many aquatic species. For example, if a fish species has evolved to be triggered to spawn by high flows, a flood control dam may reduce future reproduction.
+According to the Army Corps of Engineers’ National Inventory of Dams, North Carolina has 3191 dams, including the Falls Lake Dam. The Falls Lake Dam was completed in 1981 to manage the flow of the Neuse River. Flood control dams remove high flows but can have anthropogenic impacts on the ecological needs of many aquatic species. For example, if a fish species has evolved to be triggered to spawn by high flows, a flood control dam may reduce future reproduction.   
  
 Over the past three decades a series of smaller dams downstream on the Neuse have been removed, and the Neuse River now flows freely from Falls Lake to the Pamlico Sound for the first time in 100 years. Research has shown that the removal of these downstream dams has positive ecological effects. In 2019 shad began migrating all the way to Raleigh for the *first time* since the 18th century. It is thought that the migration was potentially triggered by changes in the river flow as larger flows reduced salinity in estuaries and triggered the fish to migrate upstream.
 
-**Question 1:**  
+**Question 1:**   
 
-
-*In light of the recent interest in the hydrological effects of dams on the Neuse River, we wanted to evaluate if there was a change in discharge before and after the construction of the Falls Lake Dam? Knowing whether there was a change, and what type or change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
+* In light of the recent interest in the hydrological effects of dams on the Neuse River, we wanted to evaluate if there was a change in discharge before and after the construction of the Falls Lake Dam? Knowing whether there was a change, and what type or change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
 
 \newpage
 
 **Dataset Information**   
-
 *Discharge Data:*   
-
 To evaluate the change in discharge before and after the construction of the Falls Lake Dam, we used daily mean discharge data from four USGS streamflow gages on the Neuse River. The gage data was downloaded from the USGS National Water Information System.
 
 The date ranges of discharge data available is dependent on the dates in which the gage has been in use. For example, daily mean discharge data is available from Gage #02087183 from 1970 to 2020. Due to seasonality, we only examined data from full years, ending in 2020. The spatial gage data was also retrieved from the USGS National Water Information System.
 
-Gage Station Name         |   Gage ID                 |   Data available
-__________                |   ___________             |   ___________
-Falls Lake                |   02087183                |   1970-2020
-Clayton                   |   02087500                |   1927-2020
-Goldsboro                 |   02089000                |   1930-2020
-Kinston                   |   02089500                |   1930-2020
+
+Gage Station Name     |   Gage ID             |   Period Data Available
+__________            |   ___________         |   ___________
+Falls Lake            |   02087183            |   1970-2020
+Clayton               |   02087500            |   1927-2020
+Goldsboro             |   02089000            |   1930-2020
+Kinston               |   02089500            |   1930-2020
 
 
-*Dam Removal Spatial Data*  
-
+**Dam Removal Spatial Data**  
 The Falls Lake Dam has recieved increased interest since the removal of downstream dams, most recently the Milburnie Dam in 2017. To visualize the downstream dams removed on the Neuse River and others around the state, we used categorical and spatial data from the American Rivers Dam Removal Database. The database contains 1,775 entries dating back to 1912, but our sample size was small, as North Carolina contains only 36 removed dams.
 
 We database includes all known dam removals in the U.S. from 1916-2016. (Note: It is nearly impossible to determine the exact number or dams removed or when they were constructed because many don’t meet the US Army Corps of Engineers’ National Inventory of Dams.) American Rivers defines a dam as removed if: *a significant portion of the dam must have been removed for the full height of the dam, such that ecological function, natural river flow and fish passage can be restored at the site.*
@@ -72,7 +65,6 @@ The dataset contained American Rivers-specific ID, National ID number, Dam Name,
 \newpage
 
 **Exploratory Analysis:**   
-
 To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out.
 
 ```{r gage location map, echo=FALSE, fig.align="left", fig.cap="Falls Lake Dam and Gage Station Locations used for Discharge Analysis", message=FALSE}
@@ -86,24 +78,6 @@ gage.data.nc.sf <- st_as_sf(gage.data.nc.dec,
 falls.lake.dam.sf <- st_as_sf(falls.lake, 
                               coords =c("Longitude","Latitude"), 
                               crs = 4326)
-
-tag.map.title <- tags$style(HTML("
-  .leaflet-control.map-title { 
-    transform: translate(-50%,20%);
-    position: fixed !important;
-    left: 50%;
-    text-align: center;
-    padding-left: 10px; 
-    padding-right: 10px; 
-    background: rgba(255,255,255,0.75);
-    font-weight: bold;
-    font-size: 12px;
-  }
-"))
-
-title.gage <- tags$div(
-  tag.map.title, HTML("Gage Stations overlaid on 8-Digit Subbasins, North Carolina (2021)")
-)
 
 pal2 <- colorNumeric(
     palette = 'Dark2',
@@ -123,12 +97,9 @@ huc.gage.map <- leaflet() %>%
   addLegend("bottomlef", pal = pal2, values = huc8_sf$ACRES,
     title = "HUC 8 Subbasins by area (acres)",
     opacity = 0.75
-  ) %>%
-  addControl(title.gage, position = "topleft", className="map-title")
+  )
 
 huc.gage.map
-
-#saveWidget(huc.gage.map, file = "huc.gage.map.html")
 
 ```
 ![Gage Stations Analyzed for Falls Lake Dam]("./Output/gage.station.png")
@@ -137,10 +108,6 @@ To visualize the downstream dams removed on the Neuse River and others around th
 
 ```{r dam removal map, echo=FALSE, fig.align="left", fig.cap= "Dams Removed in North Carolina since 1916, including on Neuse River", message = FALSE}
 dam.data.nc.sf <- st_as_sf(x = dam.data.nc, coords = c('Longitude','Latitude'), crs=4326)
-
-title.dam <- tags$div(
-  tag.map.title, HTML("Dam Removals (1988-2021) overlaid on 8-Digit Subbasins, North Carolina (2021)")
-)
 
 dam.map.with.county  <- leaflet() %>%
   addProviderTiles("CartoDB.Positron") %>% 
@@ -152,12 +119,9 @@ dam.map.with.county  <- leaflet() %>%
               fillOpacity = 0.5) %>%
   addMarkers(data=dam.data.nc.sf, 
                     popup = paste("Dam Name:", dam.data.nc.sf$Dam_Name, "<br>", "Year Removed:", dam.data.nc.sf$Year_Removed, "<br>", "River Restored:", dam.data.nc.sf$River, "HUB 8 Subbasin Name", dam.data.nc.sf$HUC8)) %>%
-  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>")) %>%
-  addControl(title.dam, position = "topleft", className="map-title")
+  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>"))
 
 dam.map.with.county
-
-#saveWidget(dam.map.with.county, file = "dam.map.with.county.html")
 
 ```
 
@@ -181,8 +145,7 @@ The Falls Lake Dam decreases the downstream discharge, but this effect diminishe
 
 \newpage
 
-**References**   
-
+##References
 *U.S. Geological Survey, 2016, National Water Information System data available on the World Wide Web (USGS Water Data for the Nation), accessed at URL <http://waterdata.usgs.gov/nwis/>*
 
 *Rivers, American (2017): American Rivers Dam Removal Database. figshare.
