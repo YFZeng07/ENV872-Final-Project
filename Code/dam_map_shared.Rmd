@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = FALSE)
 if(!require(pacman)) install.packages("pacman")
 pacman::p_load(tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, leaflet, ggplot2, RColorBrewer, shiny, htmlwidgets)
 
-dam.data.nc <- read.csv("ARDamRemovalList_Figshare_Feb2021.csv") %>% filter(State == "NC") %>% select(Dam_Name:State) %>% na.omit()
-falls.lake <- read.csv("falls_lake.csv")
-counties_sf <-  st_read('/Users/cheneygardner/Desktop/Env872/Env872-Final-Project/spatial_nc/cb_2018_us_county_20m.shp') %>% filter(STATEFP == 37)
+dam.data.nc <- read.csv("./Data/Raw/ARDamRemovalList_Figshare_Feb2021.csv") %>% filter(State == "NC") %>% select(Dam_Name:State) %>% na.omit()
+falls.lake <- read.csv("./Data/Processed/falls_lake.csv")
+counties_sf <-  st_read("./Data/Raw/spatial_nc/cb_2018_us_county_20m.shp") %>% filter(STATEFP == 37)
 
 class(dam.data.nc$Year_Removed)
 dam.data.nc$Year_Removed <- as.Date(dam.data.nc$Year_Removed, format = "%Y")

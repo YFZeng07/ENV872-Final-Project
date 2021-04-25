@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 if(!require(pacman)) install.packages("pacman")
 pacman::p_load(tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, leaflet, ggplot2, RColorBrewer, shiny, measurements, htmlwidgets)
 
-gage.data.nc <- read.csv("gage_data_dam_new.csv")
-falls.lake <- read.csv("falls_lake.csv")
-huc8_sf <-  st_read('spatial_nc/NCHUC8.shp')
+gage.data.nc <- read.csv("./Data/Processed/gage_data_dam_new.csv")
+falls.lake <- read.csv("./Data/Processed/falls_lake.csv")
+huc8_sf <-  st_read("./Data/Raw/spatial_nc/NCHUC8.shp")
 
 #convert<-function(coord){
 #  tmp1=strsplit(coord,"°")
