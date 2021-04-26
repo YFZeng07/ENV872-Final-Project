@@ -1,0 +1,392 @@
+---
+output: 
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    number_sections: yes
+    latex_engine: xelatex
+always_allow_html: true
+geometry: margin=2.54cm
+title: "Dams in North Carolina: A Case Study of the Falls Lake Dam"
+subtitle: "https://github.com/cheneygardner/ENV872-Final-Project.git"
+author: "Cheney Gardner and Yingfan Zeng"
+fontsize: 12pt
+mainfont: Times New Roman
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(knitr, tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, ggplot2, RColorBrewer, shiny, measurements, leaflet, mapview, has_crop_tools, kable, ggpmisc, ggpubr, tinytex)
+
+gage.data.nc <- read.csv("./Data/Raw/gage_data_dam_new.csv")
+falls.lake <- read.csv("./Data/Raw/falls_lake.csv")
+huc8_sf <-  st_read("./Data/Raw/spatial_nc/NCHUC8.shp")
+dam.data <- read.csv("./Data/Raw/ARDamRemovalList_Figshare_Feb2021.csv")
+counties_all_sf <-  st_read("./Data/Raw/spatial_nc/cb_2018_us_county_20m.shp")
+
+dam.data.nc <- dam.data %>% filter(State == "NC") %>% select(Dam_Name:State) %>% na.omit()
+counties_sf <-  counties_all_sf %>% filter(STATEFP == 37)
+
+#import discharge data
+Gages_l <- read.csv("./Data/Processed/USGS1.csv") %>%
+  select(-1) %>%
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d"))
+
+FallsLake <- read.csv("./Data/Processed/FallsLake_processed.csv") %>%
+  select(2:5) %>%
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d")) %>%
+  na.omit()
+
+Clayton <- read.csv("./Data/Processed/Clayton_processed.csv") %>%
+  select(2:5)  %>%
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d"))
+
+Goldsboro <- read.csv("./Data/Processed/Goldsboro_processed.csv") %>%
+  select(2:5)  %>%
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d"))
+
+Kinston <- read.csv("./Data/Processed/Kinston_processed.csv") %>%
+  select(2:5)  %>%
+  mutate(datetime = as.Date(datetime, format = "%Y-%m-%d")) %>%
+  na.omit()
+
+#build a ggplot theme
+MyTheme <- theme_bw(base_size = 14) +
+  theme(axis.text = element_text(color = "black", size = 12),
+        axis.title=element_text(size = 14, face = "bold"),
+        legend.position = "right",
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold")) 
+```
+
+# Rationale and Research Questions
+
+According to the Army Corps of Engineers’ National Inventory of Dams, North Carolina has 3191 dams, including the Falls Lake Dam. The Falls Lake Dam was completed in 1981 to manage the flow of the Neuse River. Flood control dams remove high flows but can have anthropogenic impacts on the ecological needs of many aquatic species. For example, if a fish species has evolved to be triggered to spawn by high flows, a flood control dam may reduce future reproduction.   
+ 
+Over the past three decades, a series of smaller dams downstream on the Neuse have been removed, and the Neuse River now flows freely from Falls Lake to the Pamlico Sound for the first time in 100 years. Research has shown that the removal of these downstream dams has positive ecological effects on fish migration (Raabe and Hightower, 2014). It is thought that the migration was potentially triggered by changes in the river flow as larger flows reduced salinity in estuaries and triggered the fish to migrate upstream.
+
+In order to further explore the impact of a dam on the hydrological environment, we chose the Falls Lake Dam as a case study for a more in-depth analysis. Knowing whether there was a change in streamflow, and what type of change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
+
+Research Question:
+
+* *Was there any change in discharge before and after the construction of the Falls Lake Dam and, if so, are there trends?*
+
+\newpage
+
+# Dataset Information
+
+## Dam Removal Spatial Data
+
+The Falls Lake Dam has received increased interest since the removal of downstream dams, most recently the Milburnie Dam in 2017. To visualize the downstream dams removed on the Neuse River and others around the state, we used categorical and spatial data from the American Rivers Dam Removal Database. The database contains 1,775 entries dating back to 1912, but our sample size was small, as North Carolina contains only 36 removed dams.
+
+We database includes all known dam removals in the U.S. from 1916-2016. (Note: It is nearly impossible to determine the exact number or dams removed or when they were constructed because many don’t meet the US Army Corps of Engineers’ National Inventory of Dams.) American Rivers defines a dam as removed if: *a significant portion of the dam must have been removed for the full height of the dam, such that ecological function, natural river flow and fish passage can be restored at the site.*
+
+The dataset contained American Rivers-specific ID, National ID number, Dam Name, Year Removed, Latitude, Longitude, City and/or County, River, HUC8, State, Dam Height, Dam Length, Owner, Year Built, Original Use, Type of Material, Miles Restored and River Miles Reported. For the purposes of our analysis, we selected only entries from North Carolina and wrangled only the Dam Name, Year Removed, City and/or County, River, HUC8 and geometry columns. Two unnamed dams in North Carolina, AR-ID NC-010 and NC-029, did not have any spatial data, which was critical to our exploratory analysis, so they had to be removed.
+
+## Discharge Data
+
+To evaluate the change in discharge before and after the construction of the Falls Lake Dam, we used daily mean discharge data from four USGS streamflow gages on the Neuse River. The gage data was downloaded from the USGS National Water Information System.
+
+The date ranges of discharge data available is dependent on the dates in which the gage has been in use. For example, daily mean discharge data is available from Gage #02087183 from 1970 to 2020. Due to seasonality, we only examined data from full years, ending in 2020. The spatial gage data was also retrieved from the USGS National Water Information System.
+
+```{R discharge table, echo = FALSE}
+Gage_name <- c("Falls Lake", "Clayton", "Goldsboro", "Kinston")
+Gage_ID <- c("02087183", "02087500", "02089000", "02089500")
+Date_available <- c("1970-2020", "1927-2020", "1930-2020", "1930-2020")
+
+discharge_data <- data.frame(Gage_name, Gage_ID, Date_available)
+colnames(discharge_data) <- c('Gage Name', 
+                           'Gage ID', 'Available Period')
+
+knitr::kable(discharge_data, caption = "USGS Gages for Discharge Data")
+
+```
+
+
+## Data Wrangling
+
+The discharge data was wrangled before further analysis. To analyze the data from each gage, we dropped NA data, changed column names and mutated the date columns to the date format. Then, we combined data from all the four gages to produce a total dataset. We also aggregated daily discharge data by gage to generate another total dataset to prepare for following analysis. 
+
+\newpage
+
+# Exploratory Analysis
+
+## Dam Removal Patterns
+
+To visualize the downstream dams removed on the Neuse River and others around the state, we wrangled American Rivers Dam Removal Database to only include information from North Carolina. Then we filtered for the information relevant to our spatial analysis: latitude/longitude, dam name, removal year and HUC 8 watershed basin. When we conducted our analysis of discharge data from the different gage sites, these maps allowed us to easily determine whether there were spatial patterns to changes in discharge. The maps also allowed us to quickly determine which dams on the Neuse had previously been removed, as well as what other dams in the same HUC watershed.
+
+```{r dam removal map, echo=FALSE, fig.align="left", fig.cap= "Dams Removed in North Carolina since 1916, including on Neuse River", message = FALSE}
+dam.data.nc.sf <- st_as_sf(x = dam.data.nc, coords = c('Longitude','Latitude'), crs=4326)
+
+dam.map.with.county  <- leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(data = huc8_sf, 
+              color = "olivedrab",
+              weight = 1, 
+              smoothFactor = 0.5,   
+              opacity = 1.0,
+              fillOpacity = 0.5) %>%
+  addMarkers(data=dam.data.nc.sf, 
+                    popup = paste("Dam Name:", dam.data.nc.sf$Dam_Name, "<br>", "Year Removed:", dam.data.nc.sf$Year_Removed, "<br>", "River Restored:", dam.data.nc.sf$River, "HUB 8 Subbasin Name", dam.data.nc.sf$HUC8)) %>%
+  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>"))
+
+dam.map.with.county
+
+```
+
+![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
+
+## Gages locations
+
+To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out. (We included PNG versions of the maps in our report. The original HTML code can be found on our github repository Code folder.)
+
+```{r gage location map, echo=FALSE, fig.align="left", fig.cap="Falls Lake Dam and Gage Station Locations used for Discharge Analysis", message=FALSE}
+gage.data.nc.dec <- gage.data.nc %>%
+  select(USGS.Station, County, HUC, Latitude.dec, Longitude.dec) 
+ 
+gage.data.nc.sf <- st_as_sf(gage.data.nc.dec,
+                             coords = c('Longitude.dec','Latitude.dec'),
+                             crs=4326)
+
+falls.lake.dam.sf <- st_as_sf(falls.lake, 
+                              coords =c("Longitude","Latitude"), 
+                              crs = 4326)
+
+pal2 <- colorNumeric(
+    palette = 'Dark2',
+  domain = huc8_sf$ACRES)
+
+huc.gage.map <- leaflet() %>% 
+  addProviderTiles("CartoDB.Positron") %>%  
+  addPolygons(data = huc8_sf, 
+              color = ~pal2(huc8_sf$ACRES), 
+              weight = 1, 
+              smoothFactor = 0.5,   
+              opacity = 1.0,
+              fillOpacity = 0.5) %>% 
+    addMarkers(data = gage.data.nc.sf,
+               popup = paste("USGS Station:", gage.data.nc.sf$USGS.Station, "<br>","County:", gage.data.nc.sf$County, "<br>","HUC:", gage.data.nc.sf$HUC)) %>%
+  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>")) %>%
+  addLegend("bottomlef", pal = pal2, values = huc8_sf$ACRES,
+    title = "HUC 8 Subbasins by area (acres)",
+    opacity = 0.75
+  )
+
+huc.gage.map
+
+```
+![Gage Stations Analyzed for Falls Lake Dam]("./Output/gage.station.png")
+
+## Overview of the discharge data
+
+In order to have a preliminary basic understanding of the discharge data at the four gages, we plotted the annual average discharge at the four gages by time. The year the Falls Lake Dam was completed, 1981, is marked with a vertical line. As visible in our map, the order of gage locations the nearest to the farthest distance from the Falls Lake Dam is Falls Lake, Clayton, Goldsboro, Kinston. Discharge at the two closer gages is significantly lower than that at the two farther gages. The flow changes before and after the dam was built are not obvious in this figure.
+
+```{R Plot annual mean discharge, echo = FALSE, message = FALSE, warning = FALSE, fig.align="left", fig.cap = "Annual Average Discharge at 4 Gages"}
+#wrangle data
+Gages_l_2 <- Gages_l %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year, gage) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+#plot annual mean
+ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = 1981, size = 1.5) +
+  geom_text(aes(x = 1981, label="1981", y = 5000), 
+            col = "black", size = 6, vjust = -0.5, angle = -90) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  labs(col = "Gage") +
+  scale_color_discrete(breaks=c("Falls Lake","Clayton","Goldsboro", "Kinston")) +
+  MyTheme
+
+```
+
+# Analysis
+
+## Hydrological impacts of the construction of Falls Lake Dam
+
+The first step to explore the changes in the discharge of the Neuse River downstream of the Falls Lake Dam was to conduct a time series analysis. From the time series analysis results (Figure 4-7), all the four gages showed clear seasonal cycles, but the general trends remained vague. 
+
+```{R Time series Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Falls Lake gage"}
+#Falls Lake
+FallsLake_ts <- ts(FallsLake$discharge_mean, 
+                           start = c(1970,7), frequency = 365)
+FallsLake_decomposed <- stl(FallsLake_ts, s.window = "periodic")
+plot(FallsLake_decomposed)
+
+```
+
+```{R Time series Clayton, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Clayton gage"}
+#Clayton
+Clayton_ts <- ts(Clayton$discharge_mean, 
+                   start = c(1927,8), frequency = 365)
+Clayton_decomposed <- stl(Clayton_ts, s.window = "periodic")
+plot(Clayton_decomposed)
+
+```
+
+```{R Time series Goldsboro, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Goldsboro gage"}
+#Goldsboro
+Goldsboro_ts <- ts(Goldsboro$discharge_mean, 
+                 start = c(1930,3), frequency = 365)
+Goldsboro_decomposed <- stl(Goldsboro_ts, s.window = "periodic")
+plot(Goldsboro_decomposed)
+
+```
+
+```{R Time series Kinston, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Kinston gage"}
+#Kinston
+Kinston_ts <- ts(Kinston$discharge_mean, 
+                   start = c(1930,3), frequency = 365)
+Kinston_decomposed <- stl(Kinston_ts, s.window = "periodic")
+plot(Kinston_decomposed)
+
+```
+
+To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 8-11). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which meant the fit of the model was poor for flow data with large fluctuations. 
+
+```{R GLM Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Falls Lake gage"}
+#Falls Lake
+FallsLake_annual <- FallsLake %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(FallsLake_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  MyTheme
+
+```
+
+```{R GLM Clayton, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Clayton gage"}
+#Clayton
+Clayton_annual <- Clayton %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(Clayton_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  MyTheme
+
+```
+
+```{R GLM Goldsboro, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Goldsboro gage"}
+#Goldsboro
+Goldsboro_annual <- Goldsboro %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(Goldsboro_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  MyTheme
+
+```
+
+```{R GLM Kinston, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Kinston gage"}
+#Kinston
+Kinston_annual <- Kinston %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+ggplot(Kinston_annual, aes(x = year, y = annual_mean)) +
+  geom_point() +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_poly_eq(formula = y~x, 
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               parse = TRUE) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  MyTheme
+
+```
+
+Finally, we conducted a t-test for pre- and post-dam average discharge for each site. Given that the Falls Lake Dam was built between 1978 and 1981, the pre-dam period of each gage is defined as from the beginning of records to December 31st, 1977, while the post-dam period is from January 1st, 1982 to December 31st, 2020. The results of the t-test are shown in Table 2. Discharge at the Falls Lake gage and the Clayton gage significantly decreased after the dam construction, with a p-value less than 0.05. And the other two gages have little change in discharge before and after the dam building with high p values. 
+
+```{r t test, echo = FALSE, message = FALSE}
+#Falls Lake
+FallsLake_pre <- FallsLake %>%
+  filter(datetime <= as.Date("1977-12-31"))
+FallsLake_post <- FallsLake %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+FallsLake_ttest <- t.test(x = FallsLake_pre$discharge_mean, y = FallsLake_post$discharge_mean)
+
+#Clayton
+Clayton_pre <- Clayton %>%
+  filter(datetime <= as.Date("1977-12-31"))
+Clayton_post <- Clayton %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+Clayton_ttest<- t.test(x = Clayton_pre$discharge_mean, y = Clayton_post$discharge_mean)
+
+#Goldsboro
+Goldsboro_pre <- Goldsboro %>%
+  filter(datetime <= as.Date("1977-12-31"))
+Goldsboro_post <- Goldsboro %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+Goldsboro_ttest <- t.test(x = Goldsboro_pre$discharge_mean, y = Goldsboro_post$discharge_mean)
+
+#Kinston
+Kinston_pre <- Kinston %>%
+  filter(datetime <= as.Date("1977-12-31"))
+Kinston_post <- Kinston %>%
+  filter(datetime >= as.Date("1982-01-01"))
+
+Kinston_ttest <- t.test(x = Kinston_pre$discharge_mean, y = Kinston_post$discharge_mean)
+
+#build a table
+pre_dam <- c(FallsLake_ttest$estimate[1], Clayton_ttest$estimate[1], 
+             Goldsboro_ttest$estimate[1], Kinston_ttest$estimate[1])
+post_dam <- c(FallsLake_ttest$estimate[2], Clayton_ttest$estimate[2], 
+              Goldsboro_ttest$estimate[2], Kinston_ttest$estimate[2])
+p_value <- c(FallsLake_ttest$p.value, Clayton_ttest$p.value,
+             Goldsboro_ttest$p.value, Kinston_ttest$p.value)
+
+ttest_table <- data.frame(pre_dam, post_dam, p_value)
+colnames(ttest_table) <- c('Pre-dam mean discharge', 
+                           'Post-dam mean discharge', 'P value')
+rownames(ttest_table) <- c("Falls Lake", "Clayton", "Goldsboro", "Kinston")
+
+knitr::kable(ttest_table, caption = "Results of the t-test on discharge before and after the construction of the Falls Lake Dam")
+```
+
+
+\newpage
+
+# Summary and Conclusions  
+、
+While the number of Dams being removed in North Carolina has increased in recent years, the hydrological impacts of dams on rivers remains unclear. Taking the Falls Lake Dam for a closer study on its hydrological impacts, we analyzed the changes of downstream discharge before and after its construction After the construction of the Falls Lake Dam, the discharge at the two downstream gages closest to the dam (Falls Lake and Clayton) decreased, while the discharge of two farther gages (Goldsboro and Kinston) had no obvious change. It may be because longer distance and annexed tributaries weaken the dam's influence on the discharge at these two gages. We can conclude that the Falls Lake Dam reduced the discharge of a river within a certain distance. This information is valuable for the hydrological effects of other dams in North Carolina, as well as for dam management and future dam removal.
+
+\newpage
+
+## References
+
+Raabe, J. K., and Hightower, J. E. (2014). Assessing distribution of migratory fishes and connectivity following complete and partial dam removals in a North Carolina river. *North American Journal of Fisheries Management*, 34(5), 955-969.
+
+Rivers, American (2017): American Rivers Dam Removal Database. figshare.
+<https://doi.org/10.6084/m9.figshare.5234068.v2>
+
+U.S. Geological Survey. (2016), National Water Information System data available on the World Wide Web (USGS Water Data for the Nation), accessed at URL <http://waterdata.usgs.gov/nwis/>
