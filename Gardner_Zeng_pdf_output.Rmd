@@ -4,6 +4,7 @@ output:
     keep_tex: yes
     fig_caption: yes
     number_sections: yes
+    latex_engine: xelatex
 always_allow_html: true
 geometry: margin=2.54cm
 title: "Dams in North Carolina: A Case Study of the Falls Lake Dam"
@@ -17,7 +18,7 @@ mainfont: Times New Roman
 knitr::opts_chunk$set(echo = TRUE)
 
 if(!require(pacman)) install.packages("pacman")
-pacman::p_load(knitr, tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, ggplot2, RColorBrewer, shiny, measurements, leaflet, mapview, has_crop_tools, kable, ggpmisc, ggpubr)
+pacman::p_load(knitr, tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, ggplot2, RColorBrewer, shiny, measurements, leaflet, mapview, has_crop_tools, kable, ggpmisc, ggpubr, tinytex)
 
 gage.data.nc <- read.csv("./Data/Raw/gage_data_dam_new.csv")
 falls.lake <- read.csv("./Data/Raw/falls_lake.csv")
@@ -65,13 +66,9 @@ According to the Army Corps of Engineers’ National Inventory of Dams, North Ca
  
 Over the past three decades, a series of smaller dams downstream on the Neuse have been removed, and the Neuse River now flows freely from Falls Lake to the Pamlico Sound for the first time in 100 years. Research has shown that the removal of these downstream dams has positive ecological effects on fish migration (Raabe and Hightower, 2014). It is thought that the migration was potentially triggered by changes in the river flow as larger flows reduced salinity in estuaries and triggered the fish to migrate upstream.
 
-Therefore, we raised 2 research questions to be studied in this project: 
+In order to further explore the impact of a dam on the hydrological environment, we chose the Falls Lake Dam as a case study for a more in-depth analysis. Knowing whether there was a change, and what type of change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
 
-* Has there been a change in the rate of dam removals in North Carolina?
-  + Given the important impact of dams on the ecosystem and hydrology of the river systems, we would like to make an overall assessment of the current status and removal of dams in North Carolina. 
-
-* In light of the known hydrological effects of dams, is there any change in discharge before and after the construction of the Falls Lake Dam? What are the trends?
-  + In order to further explore the impact of a dam on the hydrological environment, we chose the Falls Lake Dam as a case study for a more in-depth analysis. Knowing whether there was a change, and what type of change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
+* *Therefore, we chose to evaluate whether, in light of the known hydrological effects of dams, was there any change in discharge before and after the construction of the Falls Lake Dam? If so, are there trends?*
 
 \newpage
 
@@ -79,7 +76,7 @@ Therefore, we raised 2 research questions to be studied in this project:
 
 ## Dam Removal Spatial Data
 
-The Falls Lake Dam has recieved increased interest since the removal of downstream dams, most recently the Milburnie Dam in 2017. To visualize the downstream dams removed on the Neuse River and others around the state, we used categorical and spatial data from the American Rivers Dam Removal Database. The database contains 1,775 entries dating back to 1912, but our sample size was small, as North Carolina contains only 36 removed dams.
+The Falls Lake Dam has received increased interest since the removal of downstream dams, most recently the Milburnie Dam in 2017. To visualize the downstream dams removed on the Neuse River and others around the state, we used categorical and spatial data from the American Rivers Dam Removal Database. The database contains 1,775 entries dating back to 1912, but our sample size was small, as North Carolina contains only 36 removed dams.
 
 We database includes all known dam removals in the U.S. from 1916-2016. (Note: It is nearly impossible to determine the exact number or dams removed or when they were constructed because many don’t meet the US Army Corps of Engineers’ National Inventory of Dams.) American Rivers defines a dam as removed if: *a significant portion of the dam must have been removed for the full height of the dam, such that ecological function, natural river flow and fish passage can be restored at the site.*
 
@@ -101,14 +98,14 @@ Kinston               |   02089500            |   1930-2020
 
 ## Data Wrangling
 
-The discharge data was wrangled before further analysis. For the data of each gage, we dropped NA data, changed column names and mutated the date columns to the date format. Then, we combined data from all the 4 gages to produce a total dataset. We also aggregated daily discharge data by gage to generate another total dataset to prepare for following analysis. 
+The discharge data was wrangled before further analysis. For the data of each gage, we dropped NA data, changed column names and mutated the date columns to the date format. Then, we combined data from all the four gages to produce a total dataset. We also aggregated daily discharge data by gage to generate another total dataset to prepare for following analysis. 
 
 
 \newpage
 
 # Exploratory Analysis
 
-To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out.
+To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out. [HTML code available on github repository.]
 
 ```{r gage location map, echo=FALSE, fig.align="left", fig.cap="Falls Lake Dam and Gage Station Locations used for Discharge Analysis", message=FALSE}
 gage.data.nc.dec <- gage.data.nc %>%
@@ -170,11 +167,6 @@ ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
 
 ```
 
-
-\newpage
-
-# Analysis
-
 ## Dam Removal Patterns
 
 To visualize the downstream dams removed on the Neuse River and others around the state, we wrangled American Rivers Dam Removal Database to only include information from North Carolina. Then we filtered for the information relevant to our spatial analysis: latitude/longitude, dam name, removal year and HUC 8 watershed basin. When we conducted our analysis of discharge data from the different gage sites, these maps allowed us to easily determine whether there were spatial patterns to changes in discharge. The maps also allowed us to quickly determine which dams on the Neuse had previously been removed, as well as what other dams in the same HUC watershed.
@@ -200,9 +192,13 @@ dam.map.with.county
 
 ![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
 
+\newpage
+
+# Analysis
+
 ## Hydrological impacts of the construction of Falls Lake Dam
 
-The first step to explore the changes in the discharge of the Neus River downstream of the Falls Lake Dam is to conduct a time series analysis. From the time series analysis results (Figure 3-6), all the 4 gages show clear seasonal cycles, but the general trends remain vague. 
+The first step to explore the changes in the discharge of the Neuse River downstream of the Falls Lake Dam was to conduct a time series analysis. From the time series analysis results (Figure 3-6), all the four gages showed clear seasonal cycles, but the general trends remained vague. 
 
 ```{R Time series Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Falls Lake gage"}
 #Falls Lake
@@ -240,7 +236,7 @@ plot(Kinston_decomposed)
 
 ```
 
-To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 7-10). Discharge at Falls Lake and Clayton gage decreased with a negative slope, while the slopes of Goldsboro and Kinston are slightly positive. However, the R square of all the 4 regrssion are small, which means the fitting is not good for the flow data with large fluctuation. 
+To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 7-10). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which means the fit of the model was not good for this flow data with large fluctuation. 
 
 ```{R GLM Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Falls Lake gage"}
 #Falls Lake
@@ -318,7 +314,7 @@ ggplot(Kinston_annual, aes(x = year, y = annual_mean)) +
 
 ```
 
-Lastly, we conducted a t-test for pre- and post-dam average discharge for each site. Given that the Falls Lake Dam was built between 1978 and 1981, the pre-dam period of each gage is defined as from the beginning of records to December 31st, 1977, while the post-dam period is from January 1st, 1982 to December 31st, 2020. The results of the t-test are shown in Table 2. Discharge at the Falls Lake gage and the Clayton gage significantly decreased after the dam construction, with a p-value less than 0.05. And the other 2 gages have little change in discharge before and after the dam building with high p values. 
+Finally, we conducted a t-test for pre- and post-dam average discharge for each site. Given that the Falls Lake Dam was built between 1978 and 1981, the pre-dam period of each gage is defined as from the beginning of records to December 31st, 1977, while the post-dam period is from January 1st, 1982 to December 31st, 2020. The results of the t-test are shown in Table 2. Discharge at the Falls Lake gage and the Clayton gage significantly decreased after the dam construction, with a p-value less than 0.05. And the other 2 gages have little change in discharge before and after the dam building with high p values. 
 
 ```{r t test, echo = FALSE, message = FALSE}
 #Falls Lake
@@ -374,13 +370,13 @@ knitr::kable(ttest_table, caption = "Results of the t-test on discharge before a
 
 # Summary and Conclusions  
 、
-The number of Dams being removed in North Carolina has increased in recent years, and the hydrological impacts of dams on rivers remains unclear. Taking the Falls Lake Dam for a closer study on its hylogical impacts, we analysed the changes of downstream dicharge before and after its consstruction. After the construction of the Falls Lake Dam, the discharge at the 2 downstream gages closest to the dam (Falls Lake and Clayton) decreased, while the discharge of 2 farther gages (Goldsboro and Kinston) had no obvious change. It may be because longer distance and annexed tributaries weaken the dam's influence on the discharge at these 2 gages. We can conclude that the Falls Lake Dam reduced the discharge of a river within a certain distance. This information is valuable for the hydrological effects of other dams in North Carolina, as well as for dam management and future dam removal.
+While the number of Dams being removed in North Carolina has increased in recent years, the hydrological impacts of dams on rivers remains unclear. Taking the Falls Lake Dam for a closer study on its hydrological impacts, we analyzed the changes of downstream discharge before and after its construction After the construction of the Falls Lake Dam, the discharge at the two downstream gages closest to the dam (Falls Lake and Clayton) decreased, while the discharge of two farther gages (Goldsboro and Kinston) had no obvious change. It may be because longer distance and annexed tributaries weaken the dam's influence on the discharge at these two gages. We can conclude that the Falls Lake Dam reduced the discharge of a river within a certain distance. This information is valuable for the hydrological effects of other dams in North Carolina, as well as for dam management and future dam removal.
 
 \newpage
 
 ## References
 
-Raabe, J. K., & Hightower, J. E. (2014). Assessing distribution of migratory fishes and connectivity following complete and partial dam removals in a North Carolina river. *North American Journal of Fisheries Management*, 34(5), 955-969.
+Raabe, J. K., and Hightower, J. E. (2014). Assessing distribution of migratory fishes and connectivity following complete and partial dam removals in a North Carolina river. *North American Journal of Fisheries Management*, 34(5), 955-969.
 
 Rivers, American (2017): American Rivers Dam Removal Database. figshare.
 <https://doi.org/10.6084/m9.figshare.5234068.v2>
