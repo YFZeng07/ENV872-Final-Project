@@ -142,7 +142,7 @@ title.dam <- tags$div(
   tag.map.title, HTML("Dam Removals (1988-2021) overlaid on 8-Digit Subbasins, North Carolina (2021)")
 )
 
-dam.map.with.county  <- leaflet() %>%
+dam.map.with.huc  <- leaflet() %>%
   addProviderTiles("CartoDB.Positron") %>% 
   addPolygons(data = huc8_sf, 
               color = "olivedrab",
@@ -155,7 +155,7 @@ dam.map.with.county  <- leaflet() %>%
   addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>")) %>%
   addControl(title.dam, position = "topleft", className="map-title")
 
-dam.map.with.county
+dam.map.with.huc
 
 #saveWidget(dam.map.with.county, file = "dam.map.with.county.html")
 
