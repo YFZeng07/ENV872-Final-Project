@@ -66,9 +66,11 @@ According to the Army Corps of Engineers’ National Inventory of Dams, North Ca
  
 Over the past three decades, a series of smaller dams downstream on the Neuse have been removed, and the Neuse River now flows freely from Falls Lake to the Pamlico Sound for the first time in 100 years. Research has shown that the removal of these downstream dams has positive ecological effects on fish migration (Raabe and Hightower, 2014). It is thought that the migration was potentially triggered by changes in the river flow as larger flows reduced salinity in estuaries and triggered the fish to migrate upstream.
 
-In order to further explore the impact of a dam on the hydrological environment, we chose the Falls Lake Dam as a case study for a more in-depth analysis. Knowing whether there was a change, and what type of change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
+In order to further explore the impact of a dam on the hydrological environment, we chose the Falls Lake Dam as a case study for a more in-depth analysis. Knowing whether there was a change in streamflow, and what type of change, is useful information for ecologists studying the impact of dams on the habitat of species like shad.
 
-* *Therefore, we chose to evaluate whether, in light of the known hydrological effects of dams, was there any change in discharge before and after the construction of the Falls Lake Dam? If so, are there trends?*
+Research Question:
+
+* *Was there any change in discharge before and after the construction of the Falls Lake Dam and, if so, are there trends?*
 
 \newpage
 
@@ -89,23 +91,22 @@ To evaluate the change in discharge before and after the construction of the Fal
 The date ranges of discharge data available is dependent on the dates in which the gage has been in use. For example, daily mean discharge data is available from Gage #02087183 from 1970 to 2020. Due to seasonality, we only examined data from full years, ending in 2020. The spatial gage data was also retrieved from the USGS National Water Information System.
 
 
-Gage Station Name     |   Gage ID             |   Period Data Available
-__________            |   ___________         |   ___________
-Falls Lake            |   02087183            |   1970-2020
-Clayton               |   02087500            |   1927-2020
-Goldsboro             |   02089000            |   1930-2020
-Kinston               |   02089500            |   1930-2020
+Gage Station Name     |   Gage ID             
+___________________   |   ___________         
+Falls Lake            |   02087183            
+Clayton               |   02087500            
+Goldsboro             |   02089000            
+Kinston               |   02089500            
 
 ## Data Wrangling
 
-The discharge data was wrangled before further analysis. For the data of each gage, we dropped NA data, changed column names and mutated the date columns to the date format. Then, we combined data from all the four gages to produce a total dataset. We also aggregated daily discharge data by gage to generate another total dataset to prepare for following analysis. 
-
+The discharge data was wrangled before further analysis. To analyze the data from each gage, we dropped NA data, changed column names and mutated the date columns to the date format. Then, we combined data from all the four gages to produce a total dataset. We also aggregated daily discharge data by gage to generate another total dataset to prepare for following analysis. 
 
 \newpage
 
 # Exploratory Analysis
 
-To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out. [HTML code available on github repository.]
+To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out. (We included PNG versions of the maps in our report. The original HTML code can be found on our github repository Code folder.)
 
 ```{r gage location map, echo=FALSE, fig.align="left", fig.cap="Falls Lake Dam and Gage Station Locations used for Discharge Analysis", message=FALSE}
 gage.data.nc.dec <- gage.data.nc %>%
@@ -144,29 +145,6 @@ huc.gage.map
 ```
 ![Gage Stations Analyzed for Falls Lake Dam]("./Output/gage.station.png")
 
-
-In order to have a preliminary basic understanding of the discharge data at the 4 gages, we plotted the annual average discharge at the 4 gages by time. The year 1981, which was the year that the Falls Lake Dam was completed, is marked with a vertical line. The gages location order from the nearest to the farthest to the Falls Lake Dam is Falls Lake, Clayton, Goldsboro, Kinston. Discharge at the two closer gages is significantly lower than that at the two farther gages. The flow changes before and after the dam was built are not obvious in this figure.
-
-```{R Plot annual mean discharge, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Annual Average Discharge at 4 Gages"}
-#wrangle data
-Gages_l_2 <- Gages_l %>%
-  mutate(year = year(datetime)) %>%
-  group_by(year, gage) %>%
-  summarise(annual_mean = mean(discharge_mean))
-
-#plot annual mean
-ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
-  geom_line(size = 1) +
-  geom_vline(xintercept = 1981, size = 1.5) +
-  geom_text(aes(x = 1981, label="1981", y = 5000), 
-            col = "black", size = 6, vjust = -0.5, angle = -90) +
-  xlab("Year") + ylab("Annual mean discharge (cfs)") +
-  labs(col = "Gage") +
-  scale_color_discrete(breaks=c("Falls Lake","Clayton","Goldsboro", "Kinston")) +
-  MyTheme
-
-```
-
 ## Dam Removal Patterns
 
 To visualize the downstream dams removed on the Neuse River and others around the state, we wrangled American Rivers Dam Removal Database to only include information from North Carolina. Then we filtered for the information relevant to our spatial analysis: latitude/longitude, dam name, removal year and HUC 8 watershed basin. When we conducted our analysis of discharge data from the different gage sites, these maps allowed us to easily determine whether there were spatial patterns to changes in discharge. The maps also allowed us to quickly determine which dams on the Neuse had previously been removed, as well as what other dams in the same HUC watershed.
@@ -192,7 +170,29 @@ dam.map.with.county
 
 ![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
 
-\newpage
+## Initial Data Wrangling
+
+In order to have a preliminary basic understanding of the discharge data at the four gages, we plotted the annual average discharge at the four gages by time. The year the Falls Lake Dam was completed, 1981, is marked with a vertical line. As visible in our map, the order of gage locations the nearest to the farthest distance from the Falls Lake Dam is Falls Lake, Clayton, Goldsboro, Kinston. Discharge at the two closer gages is significantly lower than that at the two farther gages. The flow changes before and after the dam was built are not obvious in this figure.
+
+```{R Plot annual mean discharge, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Annual Average Discharge at 4 Gages"}
+#wrangle data
+Gages_l_2 <- Gages_l %>%
+  mutate(year = year(datetime)) %>%
+  group_by(year, gage) %>%
+  summarise(annual_mean = mean(discharge_mean))
+
+#plot annual mean
+ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = 1981, size = 1.5) +
+  geom_text(aes(x = 1981, label="1981", y = 5000), 
+            col = "black", size = 6, vjust = -0.5, angle = -90) +
+  xlab("Year") + ylab("Annual mean discharge (cfs)") +
+  labs(col = "Gage") +
+  scale_color_discrete(breaks=c("Falls Lake","Clayton","Goldsboro", "Kinston")) +
+  MyTheme
+
+```
 
 # Analysis
 
@@ -236,7 +236,7 @@ plot(Kinston_decomposed)
 
 ```
 
-To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 7-10). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which means the fit of the model was not good for this flow data with large fluctuation. 
+To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 7-10). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which meant the fit of the model was poor for flow data with large fluctuations. 
 
 ```{R GLM Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Falls Lake gage"}
 #Falls Lake
@@ -314,7 +314,7 @@ ggplot(Kinston_annual, aes(x = year, y = annual_mean)) +
 
 ```
 
-Finally, we conducted a t-test for pre- and post-dam average discharge for each site. Given that the Falls Lake Dam was built between 1978 and 1981, the pre-dam period of each gage is defined as from the beginning of records to December 31st, 1977, while the post-dam period is from January 1st, 1982 to December 31st, 2020. The results of the t-test are shown in Table 2. Discharge at the Falls Lake gage and the Clayton gage significantly decreased after the dam construction, with a p-value less than 0.05. And the other 2 gages have little change in discharge before and after the dam building with high p values. 
+Finally, we conducted a t-test for pre- and post-dam average discharge for each site. Given that the Falls Lake Dam was built between 1978 and 1981, the pre-dam period of each gage is defined as from the beginning of records to December 31st, 1977, while the post-dam period is from January 1st, 1982 to December 31st, 2020. The results of the t-test are shown in Table 2. Discharge at the Falls Lake gage and the Clayton gage significantly decreased after the dam construction, with a p-value less than 0.05. And the other two gages have little change in discharge before and after the dam building with high p values. 
 
 ```{r t test, echo = FALSE, message = FALSE}
 #Falls Lake
