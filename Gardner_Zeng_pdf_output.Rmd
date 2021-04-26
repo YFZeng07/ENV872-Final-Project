@@ -373,8 +373,8 @@ knitr::kable(ttest_table, caption = "Results of the t-test on discharge before a
 \newpage
 
 # Summary and Conclusions  
-
-After the construction of the Falls Lake Dam, the discharge at the 2 downstream gages closest to the dam (Falls Lake and Clayton) decreased, while the discharge of 2 farther gages (Goldsboro and Kinston) had no obvious change. It may be because longer distance and annexed tributaries weaken the dam's influence on the discharge at these 2 gages. (We can conclude that a dam will reduce the discharge of a river within a certain distance.)
+、
+The number of Dams being removed in North Carolina has increased in recent years, and the hydrological impacts of dams on rivers remains unclear. Taking the Falls Lake Dam for a closer study on its hylogical impacts, we analysed the changes of downstream dicharge before and after its consstruction. After the construction of the Falls Lake Dam, the discharge at the 2 downstream gages closest to the dam (Falls Lake and Clayton) decreased, while the discharge of 2 farther gages (Goldsboro and Kinston) had no obvious change. It may be because longer distance and annexed tributaries weaken the dam's influence on the discharge at these 2 gages. We can conclude that the Falls Lake Dam reduced the discharge of a river within a certain distance. This information is valuable for the hydrological effects of other dams in North Carolina, as well as for dam management and future dam removal.
 
 \newpage
 
