@@ -10,7 +10,7 @@ Cheney Gardner, Nicholas School of the Environment, Duke University, cheney.gard
 Yingfan Zeng, Nicholas School of the Environment, Duke University, yingfan.zeng@duke.edu
 
 ## Keywords
-Dams, Hydrology, Time series analysis
+Dams, Hydrology, Discharge, North Carolina
 
 ## Database Information
 Dam Removal Spatial Data:
