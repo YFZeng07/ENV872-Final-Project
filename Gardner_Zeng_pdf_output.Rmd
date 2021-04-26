@@ -112,6 +112,33 @@ The discharge data was wrangled before further analysis. To analyze the data fro
 
 # Exploratory Analysis
 
+## Dam Removal Patterns
+
+To visualize the downstream dams removed on the Neuse River and others around the state, we wrangled American Rivers Dam Removal Database to only include information from North Carolina. Then we filtered for the information relevant to our spatial analysis: latitude/longitude, dam name, removal year and HUC 8 watershed basin. When we conducted our analysis of discharge data from the different gage sites, these maps allowed us to easily determine whether there were spatial patterns to changes in discharge. The maps also allowed us to quickly determine which dams on the Neuse had previously been removed, as well as what other dams in the same HUC watershed.
+
+```{r dam removal map, echo=FALSE, fig.align="left", fig.cap= "Dams Removed in North Carolina since 1916, including on Neuse River", message = FALSE}
+dam.data.nc.sf <- st_as_sf(x = dam.data.nc, coords = c('Longitude','Latitude'), crs=4326)
+
+dam.map.with.county  <- leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(data = huc8_sf, 
+              color = "olivedrab",
+              weight = 1, 
+              smoothFactor = 0.5,   
+              opacity = 1.0,
+              fillOpacity = 0.5) %>%
+  addMarkers(data=dam.data.nc.sf, 
+                    popup = paste("Dam Name:", dam.data.nc.sf$Dam_Name, "<br>", "Year Removed:", dam.data.nc.sf$Year_Removed, "<br>", "River Restored:", dam.data.nc.sf$River, "HUB 8 Subbasin Name", dam.data.nc.sf$HUC8)) %>%
+  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>"))
+
+dam.map.with.county
+
+```
+
+![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
+
+## Gages locations
+
 To understand the spatial context of the four gage sites, we mapped the gage sites, the Falls Lake Dam and the HUC 8 watershed boundaries. (The HUC 8 hydrologic units were used on both maps because they were available and relevant for the gage data and dam removal datasets.) Using Leaflet, we included information on the USGS Station, County and HUC 8 Subbasin of the gage station, which could be retrieved when the user interacted with the map. We built functions that allowed us to customize the coloring and made sure important information, like the title, did not move when zooming in or out. (We included PNG versions of the maps in our report. The original HTML code can be found on our github repository Code folder.)
 
 ```{r gage location map, echo=FALSE, fig.align="left", fig.cap="Falls Lake Dam and Gage Station Locations used for Discharge Analysis", message=FALSE}
@@ -151,36 +178,11 @@ huc.gage.map
 ```
 ![Gage Stations Analyzed for Falls Lake Dam]("./Output/gage.station.png")
 
-## Dam Removal Patterns
-
-To visualize the downstream dams removed on the Neuse River and others around the state, we wrangled American Rivers Dam Removal Database to only include information from North Carolina. Then we filtered for the information relevant to our spatial analysis: latitude/longitude, dam name, removal year and HUC 8 watershed basin. When we conducted our analysis of discharge data from the different gage sites, these maps allowed us to easily determine whether there were spatial patterns to changes in discharge. The maps also allowed us to quickly determine which dams on the Neuse had previously been removed, as well as what other dams in the same HUC watershed.
-
-```{r dam removal map, echo=FALSE, fig.align="left", fig.cap= "Dams Removed in North Carolina since 1916, including on Neuse River", message = FALSE}
-dam.data.nc.sf <- st_as_sf(x = dam.data.nc, coords = c('Longitude','Latitude'), crs=4326)
-
-dam.map.with.county  <- leaflet() %>%
-  addProviderTiles("CartoDB.Positron") %>% 
-  addPolygons(data = huc8_sf, 
-              color = "olivedrab",
-              weight = 1, 
-              smoothFactor = 0.5,   
-              opacity = 1.0,
-              fillOpacity = 0.5) %>%
-  addMarkers(data=dam.data.nc.sf, 
-                    popup = paste("Dam Name:", dam.data.nc.sf$Dam_Name, "<br>", "Year Removed:", dam.data.nc.sf$Year_Removed, "<br>", "River Restored:", dam.data.nc.sf$River, "HUB 8 Subbasin Name", dam.data.nc.sf$HUC8)) %>%
-  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>"))
-
-dam.map.with.county
-
-```
-
-![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
-
-## Initial Data Wrangling
+## Overview of the discharge data
 
 In order to have a preliminary basic understanding of the discharge data at the four gages, we plotted the annual average discharge at the four gages by time. The year the Falls Lake Dam was completed, 1981, is marked with a vertical line. As visible in our map, the order of gage locations the nearest to the farthest distance from the Falls Lake Dam is Falls Lake, Clayton, Goldsboro, Kinston. Discharge at the two closer gages is significantly lower than that at the two farther gages. The flow changes before and after the dam was built are not obvious in this figure.
 
-```{R Plot annual mean discharge, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Annual Average Discharge at 4 Gages"}
+```{R Plot annual mean discharge, echo = FALSE, message = FALSE, warning = FALSE, fig.align="left", fig.cap = "Annual Average Discharge at 4 Gages"}
 #wrangle data
 Gages_l_2 <- Gages_l %>%
   mutate(year = year(datetime)) %>%
@@ -204,7 +206,7 @@ ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
 
 ## Hydrological impacts of the construction of Falls Lake Dam
 
-The first step to explore the changes in the discharge of the Neuse River downstream of the Falls Lake Dam was to conduct a time series analysis. From the time series analysis results (Figure 3-6), all the four gages showed clear seasonal cycles, but the general trends remained vague. 
+The first step to explore the changes in the discharge of the Neuse River downstream of the Falls Lake Dam was to conduct a time series analysis. From the time series analysis results (Figure 4-7), all the four gages showed clear seasonal cycles, but the general trends remained vague. 
 
 ```{R Time series Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Falls Lake gage"}
 #Falls Lake
@@ -242,7 +244,7 @@ plot(Kinston_decomposed)
 
 ```
 
-To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 7-10). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which meant the fit of the model was poor for flow data with large fluctuations. 
+To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 8-11). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which meant the fit of the model was poor for flow data with large fluctuations. 
 
 ```{R GLM Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Falls Lake gage"}
 #Falls Lake
