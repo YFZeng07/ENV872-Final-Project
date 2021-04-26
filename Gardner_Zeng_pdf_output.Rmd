@@ -90,13 +90,19 @@ To evaluate the change in discharge before and after the construction of the Fal
 
 The date ranges of discharge data available is dependent on the dates in which the gage has been in use. For example, daily mean discharge data is available from Gage #02087183 from 1970 to 2020. Due to seasonality, we only examined data from full years, ending in 2020. The spatial gage data was also retrieved from the USGS National Water Information System.
 
+```{R discharge table, echo = FALSE}
+Gage_name <- c("Falls Lake", "Clayton", "Goldsboro", "Kinston")
+Gage_ID <- c("02087183", "02087500", "02089000", "02089500")
+Date_available <- c("1970-2020", "1927-2020", "1930-2020", "1930-2020")
 
-Gage Station Name     |   Gage ID             
-___________________   |   ___________         
-Falls Lake            |   02087183            
-Clayton               |   02087500            
-Goldsboro             |   02089000            
-Kinston               |   02089500            
+discharge_data <- data.frame(Gage_name, Gage_ID, Date_available)
+colnames(discharge_data) <- c('Gage Name', 
+                           'Gage ID', 'Available Period')
+
+knitr::kable(discharge_data, caption = "USGS Gages for Discharge Data")
+
+```
+
 
 ## Data Wrangling
 
