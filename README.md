@@ -21,11 +21,14 @@ Original data were collected from USGS National Water Information System (https:
 
 ## Folder structure, file formats, and naming conventions 
 There are 4 folders in this repository:
-(1)Data
-There are 2 subfolders in this folder: Raw and Processed. The Raw subfolder contains all the raw data downloaded from sources as descriped in the section of Database Information. 
-- Discharge data are in the formats of txt or csv, with a naming conventions of 
 
-(2)Code
+1. Data
+There are 2 subfolders in this folder: Raw and Processed. The Raw subfolder contains all the raw data downloaded from sources as descriped in the section of Database Information. THe Processed folder has all the datasets after wrangling.
+* Raw discharge data are in the formats of txt or csv, with a naming conventions of ID_Name_daily.txt or .csv.  
+* Processed discharge datasets are in the format of csv, and named as Name_processed.csv.
+
+2. Code
+
 
 (3)Output
 
