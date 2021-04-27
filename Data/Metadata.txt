@@ -1,0 +1,19 @@
+All the data are in the Data folder.
+
+Raw
+
+02087183_FallsLake_daily.csv: Daily discharge data from USGS Falls Lake gage
+02087500_Clayton_daily.csv: Daily discharge data from USGS Clayton gage
+02089000_Goldsboro_daily.csv: Daily discharge data from USGS Goldsboro gage
+02089500_Kinston_daily.csv: Daily discharge data from USGS Kinston gage
+ARDamRemovalList_Figshare_Feb2021.csv: Dam removal data
+falls_lake.csv: Geospatial location of the Falls Lake
+gage_data_dam_new.csv: Geospatial location of the 4 gages
+spatial_nc: shapefiles for NC
+
+Processed
+
+FallsLake_processed.csv: Falls Lake discharge after wrangling
+Clayton_processed.csv: Clayton discharge after wrangling
+Goldsboro_processed.csv: Goldsboro discharge after wrangling
+Kinston_processed.csv: Kinston discharge after wrangling
