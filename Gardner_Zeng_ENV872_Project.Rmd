@@ -181,7 +181,7 @@ dam.map.with.county
 
 In order to have a preliminary basic understanding of the discharge data at the four gages, we plotted the annual average discharge at the four gages by time. The year the Falls Lake Dam was completed, 1981, is marked with a vertical line. As visible in our map, the order of gage locations the nearest to the farthest distance from the Falls Lake Dam is Falls Lake, Clayton, Goldsboro, Kinston. Discharge at the two closer gages is significantly lower than that at the two farther gages. The flow changes before and after the dam was built are not obvious in this figure.
 
-```{R Plot annual mean discharge, echo = FALSE, message = FALSE, fig.align="left", fig.cap = "Annual Average Discharge at 4 Gages"}
+```{R Plot annual mean discharge, echo = FALSE, message = FALSE, fig.align="left", fig.cap = "Annual Average Discharge at Four Gages"}
 #wrangle data
 Gages_l_2 <- Gages_l %>%
   mutate(year = year(datetime)) %>%
