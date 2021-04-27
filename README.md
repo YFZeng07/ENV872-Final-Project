@@ -1,5 +1,4 @@
 # ENV872-Final-Project-
-Gardner and Zeng's final project group
 
 ## Summary
 This repository is the working space for Cheney Gardner and Yingfan Zeng's final project for Environmental Data Analytics (ENV 872) at Duke University, Spring 2021. This project studies the dam removal trend in North Carolina and takes the Falls Lake Dam as an example to explore the hydrological effects of a dam. The repository contains data, R codes for analysis, and output tables and plots and the final report for this project. 
@@ -72,4 +71,4 @@ All the scripts and codes are in the Code folder.
 * Discharge_analysis.R: data analysis for the discharge data
 
 ## Quality assurance/quality control
-
+The data is the latest obtained from reliable sources. NAs and outliers are omitted in the process of wrangling. The collaboration and version control are via GitHub.
