@@ -177,11 +177,11 @@ dam.map.with.county
 
 ![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
 
-## Initial Data Wrangling
+## Overview of the discharge data
 
 In order to have a preliminary basic understanding of the discharge data at the four gages, we plotted the annual average discharge at the four gages by time. The year the Falls Lake Dam was completed, 1981, is marked with a vertical line. As visible in our map, the order of gage locations the nearest to the farthest distance from the Falls Lake Dam is Falls Lake, Clayton, Goldsboro, Kinston. Discharge at the two closer gages is significantly lower than that at the two farther gages. The flow changes before and after the dam was built are not obvious in this figure.
 
-```{R Plot annual mean discharge, echo = FALSE, message = FALSE, fig.align="left", fig.cap = "Annual Average Discharge at Four Gages"}
+```{R Plot annual mean discharge, echo = FALSE, message = FALSE, warning = FALSE, fig.align="left", fig.cap = "Annual Average Discharge at Four Gages"}
 #wrangle data
 Gages_l_2 <- Gages_l %>%
   mutate(year = year(datetime)) %>%
@@ -205,7 +205,7 @@ ggplot(data = Gages_l_2, aes(x = year, y = annual_mean, col = gage)) +
 
 ## Hydrological impacts of the construction of Falls Lake Dam
 
-The first step to explore the changes in the discharge of the Neuse River downstream of the Falls Lake Dam was to conduct a time series analysis. From the time series analysis results (Figure 3-6), all the four gages showed clear seasonal cycles, but the general trends remained vague. 
+The first step to explore the changes in the discharge of the Neuse River downstream of the Falls Lake Dam was to conduct a time series analysis. From the time series analysis results (Figure 4-7), all the four gages showed clear seasonal cycles, but the general trends remained vague. 
 
 ```{R Time series Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Time Series Analysis on the discharge data at the Falls Lake gage"}
 #Falls Lake
@@ -243,7 +243,7 @@ plot(Kinston_decomposed)
 
 ```
 
-To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 7-10). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which meant the fit of the model was poor for flow data with large fluctuations. 
+To further explore the trend of discharge over time, we performed a linear regression analysis on the data (Figure 8-11). Discharge at Falls Lake and Clayton gages decreased with a negative slope, while the slopes of Goldsboro and Kinston were slightly positive. However, the R square of all the four regrssion was small, which meant the fit of the model was poor for flow data with large fluctuations. 
 
 ```{R GLM Falls Lake, echo = FALSE, message = FALSE,  fig.align="left", fig.cap = "Generalized linear regression on the annual discharge data at the Falls Lake gage"}
 #Falls Lake
