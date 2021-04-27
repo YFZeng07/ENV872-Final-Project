@@ -1,0 +1,128 @@
+---
+output: 
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    number_sections: yes
+geometry: margin=2.54cm
+title: "Dams in North Carolina: A Case Study of the Falls Lake Dam"
+subtitle: "https://github.com/cheneygardner/ENV872-Final-Project.git"
+author: "Cheney Gardner and Yingfan Zeng"
+fontsize: 12pt
+mainfont: Times New Roman
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(knitr, tidyverse, dplyr, lubridate, rvest, dataRetrieval, sf, ggplot2, RColorBrewer, shiny, measurements, htmlwidgets, tinytex, leaflet, mapview)
+
+#update.packages(ask = FALSE, checkBuilt = TRUE)
+#tinytex::tlmgr_update()
+#tinytex::reinstall_tinytex()
+
+gage.data.nc <- read.csv("./Data/Raw/gage_data_dam_new.csv")
+falls.lake <- read.csv("./Data/Raw/falls_lake.csv")
+huc8_sf <-  st_read("./Data/Raw/spatial_nc/NCHUC8.shp")
+dam.data <- read.csv("./Data/Raw/ARDamRemovalList_Figshare_Feb2021.csv")
+counties_all_sf <-  st_read("./Data/Raw/spatial_nc/cb_2018_us_county_20m.shp")
+
+dam.data.nc <- dam.data %>% filter(State == "NC") %>% select(Dam_Name:State) %>% na.omit()
+counties_sf <-  counties_all_sf %>% filter(STATEFP == 37)
+```
+
+```{r gage location map, echo=FALSE, fig.align="left", fig.cap="Falls Lake Dam and Gage Station Locations used for Discharge Analysis", message=FALSE}
+gage.data.nc.dec <- gage.data.nc %>%
+  select(USGS.Station, County, HUC, Latitude.dec, Longitude.dec) 
+ 
+gage.data.nc.sf <- st_as_sf(gage.data.nc.dec,
+                             coords = c('Longitude.dec','Latitude.dec'),
+                             crs=4326)
+
+falls.lake.dam.sf <- st_as_sf(falls.lake, 
+                              coords =c("Longitude","Latitude"), 
+                              crs = 4326)
+
+tag.map.title <- tags$style(HTML("
+  .leaflet-control.map-title { 
+    transform: translate(-50%,20%);
+    position: fixed !important;
+    left: 50%;
+    text-align: center;
+    padding-left: 10px; 
+    padding-right: 10px; 
+    background: rgba(255,255,255,0.75);
+    font-weight: bold;
+    font-size: 12px;
+  }
+"))
+
+title.gage <- tags$div(
+  tag.map.title, HTML("Gage Stations overlaid on 8-Digit Subbasins, North Carolina (2021)")
+)
+
+pal2 <- colorNumeric(
+    palette = 'Dark2',
+  domain = huc8_sf$ACRES)
+
+huc.gage.map <- leaflet() %>% 
+  addProviderTiles("CartoDB.Positron") %>%  
+  addPolygons(data = huc8_sf, 
+              color = ~pal2(huc8_sf$ACRES), 
+              weight = 1, 
+              smoothFactor = 0.5,   
+              opacity = 1.0,
+              fillOpacity = 0.5) %>% 
+    addMarkers(data = gage.data.nc.sf,
+               popup = paste("USGS Station:", gage.data.nc.sf$USGS.Station, "<br>","County:", gage.data.nc.sf$County, "<br>","HUC:", gage.data.nc.sf$HUC)) %>%
+  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>")) %>%
+  addLegend("bottomlef", pal = pal2, values = huc8_sf$ACRES,
+    title = "HUC 8 Subbasins by area (acres)",
+    opacity = 0.75
+  ) %>%
+  addControl(title.gage, position = "topleft", className="map-title")
+
+huc.gage.map
+
+saveWidget(huc.gage.map, file = "huc.gage.map.html")
+
+```
+![Gage Stations Analyzed for Falls Lake Dam]("./Output/gage.station.png")
+
+```{r dam removal map, echo=FALSE, fig.align="left", fig.cap= "Dams Removed in North Carolina since 1916, including on Neuse River", message = FALSE}
+dam.data.nc.sf <- st_as_sf(x = dam.data.nc, coords = c('Longitude','Latitude'), crs=4326)
+
+title.dam <- tags$div(
+  tag.map.title, HTML("Dam Removals (1988-2021) overlaid on 8-Digit Subbasins, North Carolina (2021)")
+)
+
+dam.map.with.huc  <- leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>% 
+  addPolygons(data = huc8_sf, 
+              color = "olivedrab",
+              weight = 1, 
+              smoothFactor = 0.5,   
+              opacity = 1.0,
+              fillOpacity = 0.5) %>%
+  addMarkers(data=dam.data.nc.sf, 
+                    popup = paste("Dam Name:", dam.data.nc.sf$Dam_Name, "<br>", "Year Removed:", dam.data.nc.sf$Year_Removed, "<br>", "River Restored:", dam.data.nc.sf$River, "HUB 8 Subbasin Name", dam.data.nc.sf$HUC8)) %>%
+  addCircleMarkers(data = falls.lake.dam.sf, fillOpacity = 0.5,color="black", popup = paste("Falls Lake Dam:", falls.lake$Constructed, "<br>")) %>%
+  addControl(title.dam, position = "topleft", className="map-title")
+
+dam.map.with.huc
+
+#saveWidget(dam.map.with.county, file = "dam.map.with.county.html")
+
+```
+
+![Dams Removed in North Carolina since 1916]("./Output/dam.removal.map.png")
+
+\newpage
+
+**References**   
+
+*U.S. Geological Survey, 2016, National Water Information System data available on the World Wide Web (USGS Water Data for the Nation), accessed at URL <http://waterdata.usgs.gov/nwis/>*
+
+*Rivers, American (2017): American Rivers Dam Removal Database. figshare.
+<https://doi.org/10.6084/m9.figshare.5234068.v2>*
