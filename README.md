@@ -23,14 +23,41 @@ Original data were collected from USGS National Water Information System (https:
 There are 4 folders in this repository:
 
 1. Data
+
 There are 2 subfolders in this folder: Raw and Processed. The Raw subfolder contains all the raw data downloaded from sources as descriped in the section of Database Information. THe Processed folder has all the datasets after wrangling.
 * Raw discharge data are in the formats of txt or csv, with a naming conventions of ID_Name_daily.txt or .csv.  
 * Processed discharge datasets are in the format of csv, and named as Name_processed.csv.
 
 2. Code
 
+All the analysis R codes, in both Rmd and R formats, are in this folder. They are named by their contents. 
 
-(3)Output
+3. Output
 
-##Metadata
+The Output folder has all the resulted outputs from the analysis.
+* Maps: gage station location and dam removal in NC.
+* Plots: plots for the overview of discharge, time series analysis, and GLMs.
+* Tables: the table of t-test results
 
+4. Gardner_Zeng_ENV872_Project_files
+
+This is the folder for all plots generated when knitting the final report. They are all PDFs and named by their contents.
+
+
+## Metadata
+
+All the data are in the Data folder.
+* Raw
+  + 02087183_FallsLake_daily.csv: Daily discharge data from USGS Falls Lake gage
+  + 02087500_Clayton_daily.csv: Daily discharge data from USGS Clayton gage
+  + 02089000_Goldsboro_daily.csv: Daily discharge data from USGS Goldsboro gage
+  + 02089500_Kinston_daily.csv: Daily discharge data from USGS Kinston gage
+  + ARDamRemovalList_Figshare_Feb2021.csv: Dam removal data
+  + falls_lake.csv: Geospatial location of the Falls Lake
+  + gage_data_dam_new.csv: Geospatial location of the 4 gages
+  + spatial_nc: shapefiles for NC
+* Processed
+  + FallsLake_processed.csv: Falls Lake discharge after wrangling
+  + Clayton_processed.csv: Clayton discharge after wrangling
+  + Goldsboro_processed.csv: Goldsboro discharge after wrangling
+  + Kinston_processed.csv: Kinston discharge after wrangling
