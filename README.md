@@ -61,3 +61,15 @@ All the data are in the Data folder.
   + Clayton_processed.csv: Clayton discharge after wrangling
   + Goldsboro_processed.csv: Goldsboro discharge after wrangling
   + Kinston_processed.csv: Kinston discharge after wrangling
+
+## Scripts and code
+
+All the scripts and codes are in the Code folder.
+* dam_map_shared.Rmd: creating the dam removal map in NC
+* gage_map_shared.Rmd: creating the gage location map 
+* Gardner_HTML_maps: creating HTML maps for the above 2 maps
+* Data wrangling.R: data wrangling for the discharge data
+* Discharge_analysis.R: data analysis for the discharge data
+
+## Quality assurance/quality control
+
